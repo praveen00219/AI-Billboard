@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserType {
+  citizen
+  authority
+}
+
+enum MediaType {
+  image
+  video
+}
+
+model UserAuth {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(200)
+  email     String   @unique @db.VarChar(200)
+  number    String   @unique @db.VarChar(15)
+  password  String   @db.VarChar(200)
+  userType  UserType @default(citizen) @map("user_type")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  reports   Report[]
+
+  @@map("userAuth")
+}
+
+model AuthorityAuth {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(200)
+  email     String   @unique @db.VarChar(200)
+  number    String   @unique @db.VarChar(15)
+  password  String   @db.VarChar(200)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("authorityAuth")
+}
+
+model Report {
+  id          Int          @id @default(autoincrement())
+  citizenId   Int
+  title       String       @db.VarChar(255)
+  category    String       @db.VarChar(100)
+  location    String       @db.VarChar(255)
+  description String       @db.VarChar(500)
+  date        DateTime     @db.Date
+  latitude    Decimal?     @db.Decimal(9, 6)
+  longitude   Decimal?     @db.Decimal(9, 6)
+  status      String       @default("pending") @db.VarChar(50)
+  createdAt   DateTime     @default(now()) @map("createdAt")
+  updatedAt   DateTime     @updatedAt @map("updatedAt")
+  citizen     UserAuth     @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  media       ReportMedia[]
+  aiAnalysis  AiAnalysis[]
+
+  @@map("reports")
+}
+
+model ReportMedia {
+  id         Int       @id @default(autoincrement())
+  reportId   Int
+  fileUrl    String    @map("file_url") @db.VarChar(500)
+  fileType   MediaType @map("file_type")
+  uploadedAt DateTime  @default(now()) @map("uploadedAt")
+  report     Report    @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@map("report_media")
+}
+
+model AiAnalysis {
+  id              Int      @id @default(autoincrement())
+  reportId        Int
+  extractedText   String?  @map("extracted_text") @db.Text
+  riskPercentage  Decimal? @map("risk_percentage") @db.Decimal(5, 2)
+  riskLevel       String?  @map("risk_level") @db.VarChar(20)
+  riskDescription String?  @map("risk_description") @db.Text
+  category        String?  @db.VarChar(100)
+  createdAt       DateTime @default(now()) @map("createdAt")
+  report          Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@map("ai_analysis")
+}

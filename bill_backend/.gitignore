@@ -1,0 +1,9 @@
+node_modules
+/generated/prisma
+# secrets & runtime data
+.env
+.env.*
+!.env.example
+uploads/
+!uploads/.gitkeep
+scratch_get_auths.js
