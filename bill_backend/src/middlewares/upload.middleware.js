@@ -27,9 +27,17 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-// Multer Instance
+// Multer Instance (disk storage — persisted uploads)
 export const upload = multer({
     storage: storage,
+    limits: { fileSize: config.upload.maxSize },
+    fileFilter: fileFilter,
+});
+
+// In-memory instance — for transient AI analysis where we don't want to
+// persist files to disk (e.g. "Generate with AI" before the report is saved).
+export const uploadMemory = multer({
+    storage: multer.memoryStorage(),
     limits: { fileSize: config.upload.maxSize },
     fileFilter: fileFilter,
 });
@@ -47,4 +55,4 @@ export const handleUploadError = (err, req, res, next) => {
     next();
 };
 
-export default { upload, handleUploadError };
+export default { upload, uploadMemory, handleUploadError };

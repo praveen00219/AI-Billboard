@@ -10,6 +10,7 @@ import authRoutes from "./routes/auth.routes.js";
 import authorityRoutes from "./routes/authority.routes.js";
 import reportRoutes from "./routes/report.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
+import healthRoutes from "./routes/health.routes.js";
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use("/api/report", reportRoutes);   // Reports (Mounted under /api/report)
 app.use("/api/admin", adminRoutes);     // Admin/Violations
 app.use("/api/authority", adminRoutes); // Authority prefix compatibility
 app.use("/api/status", adminRoutes);    // Status prefix compatibility
+app.use("/api/health", healthRoutes);   // AI provider health / observability
 
 app.get("/", (req, res) => res.status(200).send("Billboard Backend API is running..."));
 

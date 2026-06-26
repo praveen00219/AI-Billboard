@@ -1,6 +1,7 @@
 import express from "express";
 import {
     analyzeImages,
+    generateReportDraft,
     createReport,
     getAllReports,
     getReportById,
@@ -11,15 +12,19 @@ import {
     getAiAnalysis,
     getAuthReporting
 } from "../controllers/report.controller.js";
-import { upload, handleUploadError } from "../middlewares/upload.middleware.js";
+import { upload, uploadMemory, handleUploadError } from "../middlewares/upload.middleware.js";
 import { verifyCitizenToken, verifyAuthorityToken } from "../middlewares/auth.middleware.js";
+import { aiRateLimiter } from "../middlewares/rateLimit.middleware.js";
 
 const router = express.Router();
 
 // ─── Citizen Routes ───────────────────────────────────────────────────────────
 
 // AI Analysis of billboard images (citizen only)
-router.post("/analysis", verifyCitizenToken, upload.array("photo", 5), handleUploadError, analyzeImages);
+router.post("/analysis", aiRateLimiter, verifyCitizenToken, upload.array("photo", 5), handleUploadError, analyzeImages);
+
+// AI draft generation — title + description from an image (citizen only, no DB write)
+router.post("/ai-generate", aiRateLimiter, verifyCitizenToken, uploadMemory.array("photo", 5), handleUploadError, generateReportDraft);
 
 // Submit a new citizen report
 router.post("/citizen-report", verifyCitizenToken, upload.array("photo", 5), handleUploadError, createReport);

@@ -361,8 +361,94 @@ export const getCitizenReportById = async (req, res) => {
     }
 };
 
+/* =========================
+   AI DRAFT (title + description)
+   Builds a professional, human-readable title and description from the
+   structured AI analysis. Resilient: still produces useful copy if the
+   model call falls back.
+========================= */
+const TITLE_BY_CATEGORY = {
+    "Structural Hazard": "Possible structural hazard on roadside billboard",
+    "Safety Hazard": "Safety hazard from roadside billboard",
+    "Content Violation": "Potential content violation on billboard",
+    "Size & Placement": "Billboard size & placement violation",
+    "Regulatory Compliance": "Billboard compliance verification",
+    "Environmental Impact": "Environmental impact concern from billboard",
+};
+
+function composeDraft(analysis) {
+    const category = analysis.category || "Billboard Violation";
+    const level = analysis.riskLevel || "Medium";
+    const pct = analysis.riskPercentage;
+    const extracted = (analysis.extractedText || "").trim();
+    const summary = (analysis.riskReason || "").trim();
+    const isFallback = !summary || /^fallback due to error/i.test(summary);
+
+    // Title
+    let title = TITLE_BY_CATEGORY[category] || `${category} detected on billboard`;
+    if (extracted) {
+        const brand = extracted.split(/[·|\n.\-]/)[0].trim().slice(0, 28);
+        if (brand && brand.length > 2) title += ` — “${brand}”`;
+    }
+
+    // Description
+    const parts = [];
+    parts.push(
+        `AI image analysis indicates a likely ${category.toLowerCase()} (${level} risk${pct != null ? `, approximately ${Math.round(pct)}%` : ""}).`
+    );
+    if (!isFallback && summary) parts.push(/[.!?]$/.test(summary) ? summary : `${summary}.`);
+
+    const flags = [];
+    const s = analysis.structuralAnalysis || {};
+    const p = analysis.sizeAnalysis || {};
+    const c = analysis.contentAnalysis || {};
+    if (s.leaning) flags.push("the structure appears to be leaning");
+    if (s.broken_parts || s.structural_damage) flags.push("there is visible structural damage or broken parts");
+    if (p.obstructs_traffic || p.blocks_visibility) flags.push("it may obstruct traffic or signage visibility");
+    if (p.too_close_to_road) flags.push("it is positioned dangerously close to the road");
+    if (p.size_appropriate === false) flags.push("its dimensions appear to exceed permitted limits");
+    if (c.obscene_detected) flags.push("the displayed content may be inappropriate");
+    if (c.political_detected) flags.push("political content was detected without evident permission");
+    if (flags.length) parts.push(`Specifically, ${flags.join(", ")}.`);
+
+    if (extracted) parts.push(`Text detected on the board: “${extracted}”.`);
+    parts.push("Requesting review and appropriate enforcement action by the concerned authority.");
+
+    return {
+        title,
+        description: parts.join(" "),
+        category,
+        riskLevel: level,
+        riskPercentage: pct != null ? Math.round(pct) : null,
+        extractedText: extracted,
+    };
+}
+
+// Generate an AI title + description draft from an uploaded image (no DB write)
+export const generateReportDraft = async (req, res) => {
+    try {
+        if (!req.files?.length) {
+            return res.status(400).json({ success: false, error: "Please upload an image to generate AI content." });
+        }
+        const file = req.files[0];
+        if (!file.mimetype?.startsWith("image/")) {
+            return res.status(400).json({ success: false, error: "AI generation requires an image file." });
+        }
+        // memoryStorage → buffer is available, nothing is written to disk.
+        // Use fewer retries so the "Generate" button fails fast on quota errors.
+        const imageBase64 = file.buffer.toString("base64");
+        const analysis = await analyzeBillboard(imageBase64, file.mimetype, null, null, null, 2);
+        const draft = composeDraft(analysis);
+        return res.json({ success: true, draft });
+    } catch (err) {
+        console.error("🚨 AI draft generation error:", err);
+        return res.status(500).json({ success: false, error: err.message || "AI generation failed" });
+    }
+};
+
 export default {
     analyzeImages,
+    generateReportDraft,
     createReport,
     getAllReports,
     getReportById,

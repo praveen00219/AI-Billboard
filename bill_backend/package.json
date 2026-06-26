@@ -6,13 +6,18 @@
   "scripts": {
     "start": "nodemon src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "seed": "node prisma/seed.js && node prisma/seed-reports.js",
+    "seed:accounts": "node prisma/seed.js",
+    "seed:reports": "node prisma/seed-reports.js",
+    "db:reset": "prisma migrate reset --force --skip-seed && npm run seed",
+    "test": "node --test"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.106.0",
     "@prisma/client": "^6.19.3",
     "axios": "^1.11.0",
     "bcrypt": "^6.0.0",
@@ -20,6 +25,7 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.5.2",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
     "mysql2": "^3.14.3",
