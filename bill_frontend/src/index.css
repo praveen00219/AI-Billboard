@@ -1,6 +1,128 @@
 @import "tailwindcss";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/space-grotesk";
 
+/* =========================================================
+   CIVIX — Design System
+   Direction: hybrid minimal-premium, dark-only
+   Brand: indigo (brand) + cyan (accent highlight)
+   ========================================================= */
+@theme {
+  /* ---- Typography ---- */
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: "Space Grotesk Variable", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Code", Menlo, Consolas, monospace;
+
+  /* ---- Brand: indigo ---- */
+  --color-brand-50:  #eef1ff;
+  --color-brand-100: #e0e5ff;
+  --color-brand-200: #c6cdff;
+  --color-brand-300: #a3a8ff;
+  --color-brand-400: #7f7cfb;
+  --color-brand-500: #6457f3;
+  --color-brand-600: #5440e0;
+  --color-brand-700: #4631c2;
+  --color-brand-800: #392a9d;
+  --color-brand-900: #2f267c;
+  --color-brand-950: #1c1547;
+
+  /* ---- Accent: cyan ---- */
+  --color-accent-300: #6ee7f9;
+  --color-accent-400: #22d3ee;
+  --color-accent-500: #06b6d4;
+  --color-accent-600: #0891b2;
+
+  /* ---- Surfaces (near-black with a blue cast) ---- */
+  --color-ink-950: #08080b;
+  --color-ink-900: #0c0c12;
+  --color-ink-850: #111119;
+  --color-ink-800: #16161f;
+  --color-ink-700: #1d1d29;
+
+  /* ---- Custom easing & shadows ---- */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --shadow-glow-brand: 0 0 0 1px rgba(100,87,243,0.18), 0 18px 60px -18px rgba(100,87,243,0.45);
+  --shadow-glow-accent: 0 0 0 1px rgba(34,211,238,0.18), 0 18px 60px -18px rgba(34,211,238,0.40);
+}
+
+/* =========================================================
+   Base layer
+   ========================================================= */
+@layer base {
+  :root { color-scheme: dark; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background-color: var(--color-ink-950);
+    color: #d4d4d8;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3, h4, h5 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  ::selection { background: rgba(100, 87, 243, 0.35); color: #ffffff; }
+
+  /* Refined scrollbar */
+  * { scrollbar-width: thin; scrollbar-color: #262633 transparent; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: #262633;
+    border: 2px solid var(--color-ink-950);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: #38384d; }
+}
+
+/* =========================================================
+   Reusable component-ish utilities
+   ========================================================= */
 @layer utilities {
+  /* Brand gradient text */
+  .text-gradient {
+    background-image: linear-gradient(110deg, #a3a8ff 0%, #6457f3 45%, #22d3ee 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Glass surfaces */
+  .glass {
+    background: rgba(17, 17, 25, 0.6);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+  }
+  .glass-strong {
+    background: rgba(12, 12, 18, 0.82);
+    backdrop-filter: blur(22px) saturate(150%);
+    -webkit-backdrop-filter: blur(22px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* Hairline ring used on premium cards */
+  .ring-hairline { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06); }
+
+  /* Subtle grid + dot backgrounds (decorative) */
+  .bg-grid-pattern {
+    background-size: 50px 50px;
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  }
+  .bg-dot-pattern {
+    background-size: 22px 22px;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  }
+
+  /* ---------- Animation utilities ---------- */
   .animate-float-slow { animation: float 12s ease-in-out infinite; }
   .animate-float-medium { animation: float 8s ease-in-out infinite; }
   .animate-float-fast { animation: float 5s ease-in-out infinite; }
@@ -9,51 +131,81 @@
   .animate-ping-slow { animation: ping 3s cubic-bezier(0, 0, 0.2, 1) infinite; }
   .animate-pulse-glow { animation: pulseGlow 2s ease-in-out infinite alternate; }
   .animate-draw-box { animation: drawBox 4s ease-out infinite; }
-  .bg-grid-pattern {
-    background-size: 50px 50px;
-    background-image: 
-      linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-  }
+  .animate-marquee { animation: marquee 20s linear infinite; }
+
+  /* Previously referenced but undefined — now implemented */
+  .animate-fade-in-up { animation: fadeInUp 0.8s var(--ease-out-expo) both; }
+  .animate-gradient-x { background-size: 200% 200%; animation: gradientX 6s ease infinite; }
+  .animate-spin-slow { animation: spin 6s linear infinite; }
+  .animate-bounce-slow { animation: bounceSlow 3.5s ease-in-out infinite; }
+  .animate-aurora { animation: aurora 18s ease-in-out infinite; }
+  .animate-shimmer { animation: shimmer 2.2s linear infinite; }
 }
 
+/* =========================================================
+   Keyframes
+   ========================================================= */
 @keyframes float {
   0%, 100% { transform: translateY(0) scale(1); }
   50% { transform: translateY(-20px) scale(1.05); }
 }
-
 @keyframes scan {
   0% { top: 0; opacity: 0; }
   10% { opacity: 1; }
   90% { opacity: 1; }
   100% { top: 100%; opacity: 0; }
 }
-
 @keyframes scrollGrid {
   0% { transform: translateY(0); }
   100% { transform: translateY(50px); }
 }
-
 @keyframes pulseGlow {
-  0% { box-shadow: 0 0 10px rgba(234, 179, 8, 0.2); }
-  100% { box-shadow: 0 0 30px rgba(234, 179, 8, 0.8); }
+  0% { box-shadow: 0 0 10px rgba(100, 87, 243, 0.2); }
+  100% { box-shadow: 0 0 34px rgba(100, 87, 243, 0.7); }
 }
-
 @keyframes drawBox {
   0% { width: 0; height: 0; opacity: 0; border-color: transparent; }
-  10% { width: 0; height: 0; opacity: 1; border-color: #facc15; border-top-color: #facc15; border-right-color: transparent; border-bottom-color: transparent; border-left-color: transparent; }
-  30% { width: 100%; height: 0; border-right-color: #facc15; border-bottom-color: transparent; border-left-color: transparent; }
-  50% { width: 100%; height: 100%; border-bottom-color: #facc15; border-left-color: transparent; }
-  70% { width: 100%; height: 100%; border-left-color: #facc15; }
+  10% { width: 0; height: 0; opacity: 1; border-color: #22d3ee; border-top-color: #22d3ee; border-right-color: transparent; border-bottom-color: transparent; border-left-color: transparent; }
+  30% { width: 100%; height: 0; border-right-color: #22d3ee; border-bottom-color: transparent; border-left-color: transparent; }
+  50% { width: 100%; height: 100%; border-bottom-color: #22d3ee; border-left-color: transparent; }
+  70% { width: 100%; height: 100%; border-left-color: #22d3ee; }
   90% { opacity: 1; }
   100% { opacity: 0; width: 100%; height: 100%; }
 }
-
 @keyframes marquee {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateY(24px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes gradientX {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+@keyframes bounceSlow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes aurora {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; }
+  33% { transform: translate(4%, -3%) scale(1.08); opacity: 0.7; }
+  66% { transform: translate(-3%, 2%) scale(0.96); opacity: 0.55; }
+}
+@keyframes shimmer {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
+}
 
-.animate-marquee {
-  animation: marquee 20s linear infinite;
+/* =========================================================
+   Accessibility — respect reduced motion
+   ========================================================= */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

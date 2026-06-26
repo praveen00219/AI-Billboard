@@ -11,6 +11,16 @@ export const reportApi = {
     return response.data;
   },
 
+  // Generate an AI title + description draft from an uploaded image
+  generateDraft: async (formData) => {
+    const response = await apiClient.post('/report/ai-generate', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
   // Submit a new citizen report
   createReport: async (reportData) => {
     const response = await apiClient.post('/report/citizen-report', reportData, {

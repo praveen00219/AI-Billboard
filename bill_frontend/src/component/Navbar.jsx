@@ -1,10 +1,13 @@
-import { Menu, Moon, Shield, Sun } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Menu, X } from "lucide-react";
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
+import Logo from "./brand/Logo";
 import { useGetAuthorityInfo } from "../hooks/Authority/GetAuthorityInfo";
 import { useGetCitizenInfo } from "../hooks/Citizen/CitizenInfo";
 import { useAuth } from "../middleware/AuthController";
 import { UseRollBased } from "../middleware/RollBasedAccessController";
+import { useEffect } from "react";
 
 export default function NavBar() {
   const { type } = UseRollBased(); // citizen ya authority
@@ -25,7 +28,7 @@ export default function NavBar() {
   const navigation = authenticated
     ? type === "citizen"
       ? [
-          { name: "DashBoard", href: "/citizen-dashboard" },
+          { name: "Dashboard", href: "/citizen-dashboard" },
           { name: "HeatMap", href: "/heatmap" },
         ]
       : [{ name: "Authority Dashboard", href: "/authority-dash" }]
@@ -37,21 +40,6 @@ export default function NavBar() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
 
-  const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
-
-  useEffect(() => {
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-    localStorage.setItem("theme", theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  };
-
   useEffect(() => {
     if (!authenticated) return;
     if (type === "citizen") {
@@ -60,6 +48,9 @@ export default function NavBar() {
       getAuthorityData();
     }
   }, [authenticated, type]);
+
+  // close mobile menu on route change
+  useEffect(() => setIsOpen(false), [location.pathname]);
 
   const displayUser =
     type === "authority"
@@ -71,50 +62,56 @@ export default function NavBar() {
       : citizen?.name || citizen?.email || "Citizen";
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-[#050505]/80 backdrop-blur-xl border-b border-white/[0.05] shadow-[0_4px_30px_rgba(0,0,0,0.5)] transition-colors duration-300">
+    <nav className="sticky top-0 z-50 w-full glass-strong border-b border-white/[0.06]">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-20 items-center justify-between">
+        <div className="flex h-[72px] items-center justify-between">
           {/* LOGO */}
-          <Link to="/" className="flex items-center space-x-3 group">
-            <div className="p-2 rounded-xl bg-gradient-to-tr from-blue-600/20 to-purple-600/20 border border-white/10 group-hover:border-white/20 transition-colors">
-              <Shield className="h-6 w-6 text-blue-400 group-hover:text-cyan-400 transition-colors" />
-            </div>
-            <span className="font-extrabold text-2xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 group-hover:to-white transition-all">
-              Billboard<span className="text-blue-500">Watch</span>
-            </span>
+          <Link to="/" className="group flex items-center transition-transform duration-200 hover:scale-[1.02]">
+            <Logo size={32} />
           </Link>
 
           {/* DESKTOP NAV LINKS */}
-          <div className="hidden md:flex items-center space-x-8">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={`text-sm font-semibold tracking-wide transition-all duration-300 hover:-translate-y-0.5 ${
-                  location.pathname === item.href
-                    ? "text-blue-400 drop-shadow-[0_0_10px_rgba(96,165,250,0.8)]"
-                    : "text-gray-400 hover:text-gray-100"
-                }`}
-              >
-                {item.name}
-              </Link>
-            ))}
+          <div className="hidden md:flex items-center gap-8">
+            {navigation.map((item) => {
+              const active = location.pathname === item.href;
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className="relative py-2 text-sm font-medium transition-colors"
+                >
+                  <span className={active ? "text-white" : "text-gray-400 hover:text-gray-100"}>
+                    {item.name}
+                  </span>
+                  {active && (
+                    <motion.span
+                      layoutId="nav-active"
+                      className="absolute -bottom-0.5 left-0 right-0 h-[2px] rounded-full bg-gradient-to-r from-brand-400 to-accent-400"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                </Link>
+              );
+            })}
           </div>
 
           {/* RIGHT SIDE ACTIONS */}
-          <div className="flex items-center space-x-4">
-            <div className="hidden md:flex items-center space-x-4">
+          <div className="flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-3">
               {authenticated ? (
                 <>
-                  <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-white/5 border border-white/10">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                    <span className="text-sm font-medium text-gray-300">
+                  <div className="flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/5 border border-white/10">
+                    <span className="relative flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60 animate-ping" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                    </span>
+                    <span className="text-sm font-medium text-gray-300 max-w-[160px] truncate">
                       {displayUser}
                     </span>
                   </div>
                   <button
                     onClick={logout}
-                    className="px-5 py-2 text-sm font-bold text-gray-300 hover:text-white transition-all duration-200 border border-white/10 rounded-full hover:bg-white/10 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]"
+                    className="px-5 py-2 text-sm font-semibold text-gray-300 hover:text-white transition-all duration-200 border border-white/10 rounded-full hover:bg-white/10"
                   >
                     Logout
                   </button>
@@ -123,13 +120,13 @@ export default function NavBar() {
                 <>
                   <Link
                     to="/login"
-                    className="px-5 py-2 text-sm font-bold text-gray-300 hover:text-white transition-all duration-200 hover:bg-white/5 rounded-full"
+                    className="px-5 py-2 text-sm font-semibold text-gray-300 hover:text-white transition-colors rounded-full hover:bg-white/5"
                   >
                     Log In
                   </Link>
                   <Link
                     to="/signup"
-                    className="px-6 py-2.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-full transition-all duration-300 shadow-[0_0_15px_rgba(37,99,235,0.4)] hover:shadow-[0_0_25px_rgba(37,99,235,0.6)] hover:-translate-y-0.5"
+                    className="px-5 py-2.5 text-sm font-semibold text-white rounded-full bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 shadow-[0_8px_26px_-8px_rgba(100,87,243,0.7)] transition-all duration-200 hover:-translate-y-0.5"
                   >
                     Get Started
                   </Link>
@@ -139,73 +136,83 @@ export default function NavBar() {
 
             {/* MOBILE MENU BUTTON */}
             <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="md:hidden p-2 rounded-full hover:bg-white/10 transition-colors duration-200 border border-white/10"
+              onClick={() => setIsOpen((v) => !v)}
+              aria-label="Toggle menu"
+              className="md:hidden p-2 rounded-full hover:bg-white/10 transition-colors border border-white/10"
             >
-              <Menu className="h-5 w-5 text-gray-300" />
+              {isOpen ? <X className="h-5 w-5 text-gray-200" /> : <Menu className="h-5 w-5 text-gray-200" />}
             </button>
           </div>
         </div>
+      </div>
 
-        {/* MOBILE MENU */}
+      {/* MOBILE MENU */}
+      <AnimatePresence>
         {isOpen && (
-          <div className="md:hidden px-4 pb-6 pt-2 space-y-3 bg-[#0A0A0A]/95 border-t border-white/5 absolute top-20 left-0 w-full shadow-2xl backdrop-blur-2xl">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                onClick={() => setIsOpen(false)}
-                className={`block text-base font-semibold px-4 py-3 rounded-xl transition-colors duration-200 ${
-                  location.pathname === item.href
-                    ? "bg-blue-600/20 text-blue-400 border border-blue-500/30"
-                    : "text-gray-400 hover:bg-white/5 hover:text-white"
-                }`}
-              >
-                {item.name}
-              </Link>
-            ))}
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="md:hidden glass-strong border-t border-white/5 px-4 pb-6 pt-3 space-y-2"
+          >
+            {navigation.map((item) => {
+              const active = location.pathname === item.href;
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  onClick={() => setIsOpen(false)}
+                  className={`block text-base font-medium px-4 py-3 rounded-xl transition-colors ${
+                    active
+                      ? "bg-brand-500/15 text-brand-200 border border-brand-500/25"
+                      : "text-gray-400 hover:bg-white/5 hover:text-white"
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              );
+            })}
 
-            <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent my-4"></div>
+            <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent my-3" />
 
             {authenticated ? (
-              <div className="space-y-3 px-4">
-                <div className="flex items-center gap-3 py-2">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                  <span className="block text-sm font-medium text-gray-300">
-                    {displayUser}
-                  </span>
+              <div className="space-y-3 px-1">
+                <div className="flex items-center gap-2 px-3">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  <span className="text-sm font-medium text-gray-300 truncate">{displayUser}</span>
                 </div>
                 <button
                   onClick={() => {
                     logout();
                     setIsOpen(false);
                   }}
-                  className="w-full px-4 py-3 text-sm font-bold text-red-400 hover:text-red-300 transition-colors duration-200 border border-red-500/20 rounded-xl bg-red-500/10"
+                  className="w-full px-4 py-3 text-sm font-semibold text-rose-300 hover:text-rose-200 transition-colors border border-rose-500/20 rounded-xl bg-rose-500/10"
                 >
                   Sign Out
                 </button>
               </div>
             ) : (
-              <div className="space-y-3 px-4">
+              <div className="space-y-3 px-1">
                 <Link
                   to="/login"
                   onClick={() => setIsOpen(false)}
-                  className="block w-full px-4 py-3 text-center text-sm font-bold text-white transition-colors duration-200 border border-white/10 rounded-xl bg-white/5"
+                  className="block w-full px-4 py-3 text-center text-sm font-semibold text-white transition-colors border border-white/10 rounded-xl bg-white/5 hover:bg-white/10"
                 >
                   Log In
                 </Link>
                 <Link
                   to="/signup"
                   onClick={() => setIsOpen(false)}
-                  className="block w-full px-4 py-3 text-sm font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-xl transition-colors duration-200 text-center shadow-lg"
+                  className="block w-full px-4 py-3 text-center text-sm font-semibold text-white rounded-xl bg-gradient-to-r from-brand-600 to-brand-500"
                 >
                   Get Started
                 </Link>
               </div>
             )}
-          </div>
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
     </nav>
   );
 }
